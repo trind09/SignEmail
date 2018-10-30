@@ -1,8 +1,10 @@
 ﻿using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
+using MimeKit.Cryptography;
 using MimeKit.Utils;
 using System;
+using System.Net.Mail;
 using System.Web.UI;
 using WebApplication2.MineMail;
 
@@ -56,27 +58,14 @@ namespace WebApplication2
                 // now set the multipart/mixed as the message body
                 message.Body = builder.ToMessageBody();
 
-                using (var client = new SmtpClient())
-                {
-                    client.ServerCertificateValidationCallback = (s, c, h, e) => true;
-
-                    client.Connect("smtp.gmail.com", 465, SecureSocketOptions.SslOnConnect);
-
-                    client.Authenticate("hellomeonet@gmail.com", "P@ssword123!");
-
-                    client.Send(message);
-
-                    client.Disconnect(true);
-
-                    lblMessage.Text = "Sent successful!";
-                }
+                SendMessage(message);
             } catch (Exception ex)
             {
                 lblMessage.Text = ex.Message;
             }
         }
 
-        protected void btnSendSignEmail_Click(object sender, EventArgs ea)
+        protected void btnSendSignedEmail_Click(object sender, EventArgs e)
         {
             try
             {
@@ -117,27 +106,55 @@ namespace WebApplication2
                 // now set the multipart/mixed as the message body
                 message.Body = builder.ToMessageBody();
 
-                message = PGPUtils.Sign(message);
+                message = SignMessage(message);
 
-                using (var client = new SmtpClient())
-                {
-                    client.ServerCertificateValidationCallback = (s, c, h, e) => true;
-
-                    client.Connect("smtp.gmail.com", 465, SecureSocketOptions.SslOnConnect);
-
-                    client.Authenticate("hellomeonet@gmail.com", "P@ssword123!");
-
-                    client.Send(message);
-
-                    client.Disconnect(true);
-
-                    lblMessage.Text = "Sent successful!";
-                }
-            }
-            catch (Exception ex)
+                SendMessage(message);
+            } catch (Exception ex)
             {
                 lblMessage.Text = ex.Message;
             }
+        }
+
+        private void SendMessage(MimeMessage message)
+        {
+            //Send message using MailKit
+            using (var client = new MailKit.Net.Smtp.SmtpClient())
+            {
+                client.Connect("smtp.gmail.com", 465, true);
+                client.Authenticate("hellomeonet@gmail.com", "P@ssword123!");
+                client.Send(message);
+                client.Disconnect(true);
+                lblMessage.Text = "Sent successful!";
+            }
+        }
+
+        private MimeMessage SignMessage(MimeMessage message)
+        {
+            HeaderId[] headersToSign = new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
+
+            string domain = "example.net";
+            string selector = "brisbane";
+
+            DkimSigner signer = new DkimSigner("C:\\my-dkim-key.pem", domain, selector)
+            {
+                SignatureAlgorithm = DkimSignatureAlgorithm.RsaSha1,
+                AgentOrUserIdentifier = "@eng.example.com",
+                QueryMethod = "dns/txt",
+            };
+
+            // Prepare the message body to be sent over a 7bit transport (such as 
+            // older versions of SMTP). This is VERY important because the message
+            // cannot be modified once we DKIM-sign our message!
+            //
+            // Note: If the SMTP server you will be sending the message over 
+            // supports the 8BITMIME extension, then you can use
+            // `EncodingConstraint.EightBit` instead.
+            message.Prepare(EncodingConstraint.SevenBit);
+
+            message.Sign(signer, headersToSign,
+                DkimCanonicalizationAlgorithm.Relaxed,
+                DkimCanonicalizationAlgorithm.Simple);
+            return message;
         }
     }
 }

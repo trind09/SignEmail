@@ -54,7 +54,7 @@ namespace WebApplication2.MineMail
             }
         }
 
-        public MimeEntity Decrypt(MimeMessage message, MimeEntity entity)
+        public static MimeEntity Decrypt(MimeMessage message, MimeEntity entity)
         {
             if (message.Body is MultipartEncrypted)
             {
@@ -70,12 +70,13 @@ namespace WebApplication2.MineMail
             }
         }
 
-        public void Sign(MimeMessage message, PgpSecretKey key)
+        public static MimeMessage Sign(MimeMessage message, PgpSecretKey key)
         {
             // digitally sign our message body using our custom GnuPG cryptography context
             using (var ctx = new MyGnuPGContext())
             {
                 message.Body = MultipartSigned.Create(ctx, key, DigestAlgorithm.Sha1, message.Body);
+                return message;
             }
         }
 
@@ -100,7 +101,7 @@ namespace WebApplication2.MineMail
             }
         }
 
-        public void Render(MimeMessage message)
+        public static MimeMessage Render(MimeMessage message)
         {
             var tmpDir = Path.Combine(Path.GetTempPath(), message.MessageId);
             var visitor = new HtmlPreviewVisitor(tmpDir);
@@ -108,9 +109,10 @@ namespace WebApplication2.MineMail
             Directory.CreateDirectory(tmpDir);
 
             message.Accept(visitor);
+            return message;
         }
 
-        public void Verify(MimeMessage message)
+        public static MimeMessage Verify(MimeMessage message)
         {
             if (message.Body is MultipartSigned)
             {
@@ -135,6 +137,7 @@ namespace WebApplication2.MineMail
                     }
                 }
             }
+            return message;
         }
     }
 }

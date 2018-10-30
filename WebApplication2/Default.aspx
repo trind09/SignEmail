@@ -17,7 +17,7 @@
             <td style="padding-bottom: 5px;"></td>
             <td style="padding-bottom: 5px;">
                 <asp:Button ID="btnSendEmail" runat="server" Text="Send" OnClick="btnSendEmail_Click" />&nbsp;
-                <asp:Button ID="btnSendSignEmail" runat="server" Text="Send Signed Email" OnClick="btnSendSignEmail_Click" />
+                <asp:Button ID="btnSendSignedEmail" runat="server" Text="Send Signed Email" OnClick="btnSendSignedEmail_Click" />
             </td>
         </tr>
         <tr>
