@@ -132,13 +132,15 @@ namespace WebApplication2
         {
             HeaderId[] headersToSign = new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
 
+            //Genereate DKIM privateKey Key and selector at https://dkimcore.org/tools/keys.html
+            string privateKey = System.Web.Hosting.HostingEnvironment.MapPath("~/TempFiles/privatekey.pem");
             string domain = "gmail.com";
-            string selector = "brisbane";
+            string selector = "1540894865.gmail";
 
-            DkimSigner signer = new DkimSigner("C:\\my-dkim-key.pem", domain, selector)
+            DkimSigner signer = new DkimSigner(privateKey, domain, selector)
             {
                 SignatureAlgorithm = DkimSignatureAlgorithm.RsaSha1,
-                AgentOrUserIdentifier = "@eng.example.com",
+                AgentOrUserIdentifier = "@gmail.com",
                 QueryMethod = "dns/txt",
             };
 
