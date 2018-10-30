@@ -132,7 +132,7 @@ namespace WebApplication2
         {
             HeaderId[] headersToSign = new HeaderId[] { HeaderId.From, HeaderId.Subject, HeaderId.Date };
 
-            string domain = "example.net";
+            string domain = "gmail.com";
             string selector = "brisbane";
 
             DkimSigner signer = new DkimSigner("C:\\my-dkim-key.pem", domain, selector)
